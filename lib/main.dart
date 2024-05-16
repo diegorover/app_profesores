@@ -24,36 +24,44 @@ class QRScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Generar y Escanear QR'),
+        title: Center(child: Text('Generar y Escanear QR')), // Título centrado
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(
-                  color: Colors.blueAccent,
-                  width: 4,
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/fondo.png'), // Ruta de la imagen de fondo
+            fit: BoxFit.cover, // Ajustar la imagen al tamaño del contenedor
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Colors.blueAccent,
+                    width: 4,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.all(16),
-              child: QrImageView(
-                data: 'www.google.com',
-                version: QrVersions.auto,
-                size: 200.0,
-                gapless: false,
-                foregroundColor: Colors.black,
-                backgroundColor: Colors.white,
-                embeddedImage: AssetImage('assets/logo.png'), // Imagen opcional en el centro del QR
-                embeddedImageStyle: QrEmbeddedImageStyle(
-                  size: Size(40, 40),
+                padding: EdgeInsets.all(16),
+                child: QrImageView(
+                  data: 'www.google.com',
+                  version: QrVersions.auto,
+                  size: 350.0,
+                  gapless: false,
+                  foregroundColor: Colors.black,
+                  backgroundColor: Colors.white,
+                  embeddedImage: AssetImage('assets/logo.png'), // Imagen opcional en el centro del QR
+                  embeddedImageStyle: QrEmbeddedImageStyle(
+                    size: Size(50, 50),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -142,4 +150,3 @@ class FormScreen extends StatelessWidget {
     );
   }
 }
-
