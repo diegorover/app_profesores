@@ -67,43 +67,51 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Usuario'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese el usuario';
-                  }
-                  return null;
-                },
+          child: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/fondo.png'), // Imagen de fondo
+                fit: BoxFit.cover,
               ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Contraseña'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese la contraseña';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _login,
-                child: Text('Iniciar Sesión'),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/alumno');
-                },
-                child: Text('Soy Alumno'),
-              ),
-            ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(labelText: 'Usuario'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingrese el usuario';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(labelText: 'Contraseña'),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingrese la contraseña';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _login,
+                  child: Text('Iniciar Sesión'),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/alumno');
+                  },
+                  child: Text('Soy Alumno'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -180,43 +188,52 @@ class _ModifyQRScreenState extends State<ModifyQRScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Modificar URL del QR')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              controller: _qrUrlController,
-              decoration: InputDecoration(labelText: 'Nueva URL para el QR'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateQR,
-              child: Text('Actualizar URL'),
-            ),
-            SizedBox(height: 20),
-            Consumer<QRData>(
-              builder: (context, qrData, child) {
-                return QrImageView(
-                  data: qrData.qrData,
-                  version: QrVersions.auto,
-                  size: 350.0,
-                  gapless: false,
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  embeddedImage: AssetImage('assets/logo.png'),
-                  embeddedImageStyle: QrEmbeddedImageStyle(
-                    size: Size(50, 50),
-                  ),
-                );
-              },
-            ),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/fondo.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: _qrUrlController,
+                decoration: InputDecoration(labelText: 'Nueva URL para el QR'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _updateQR,
+                child: Text('Actualizar URL'),
+              ),
+              SizedBox(height: 20),
+              Consumer<QRData>(
+                builder: (context, qrData, child) {
+                  return QrImageView(
+                    data: qrData.qrData,
+                    version: QrVersions.auto,
+                    size: 350.0,
+                    gapless: false,
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.white,
+                    embeddedImage: AssetImage('assets/logo.png'),
+                    embeddedImageStyle: QrEmbeddedImageStyle(
+                      size: Size(50, 50),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
 
 class QRViewExample extends StatefulWidget {
   @override
