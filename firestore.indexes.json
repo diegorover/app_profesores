@@ -1,0 +1,45 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "Profesores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "Nombre",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Asignatura",
+          "order": "ASCENDING",
+          "value": "Lengua"
+        },
+        {
+          "fieldPath": "ArrayPreguntas0",
+          "order": "ASCENDING",
+          "value": "¿Crees que el docente se ha ajustado a los objetivos de la asignatura?"
+        },
+        {
+          "fieldPath": "ArrayPreguntas1",
+          "order": "ASCENDING",
+          "value": "¿El trato del docente a los alumnos es adecuado?"
+        },
+        {
+          "fieldPath": "ArrayPreguntas2",
+          "order": "ASCENDING",
+          "value": "¿Consideras que los métodos de enseñanza utilizados por el docente son efectivos para tu aprendizaje?"
+        },
+        {
+          "fieldPath": "ArrayPreguntas3",
+          "order": "ASCENDING",
+          "value": "¿El docente demuestra conocimiento y dominio sobre los temas impartidos en clase?"
+        },
+        {
+          "fieldPath": "ArrayPreguntas4",
+          "order": "ASCENDING",
+          "value": "¿El docente fomenta la participación activa de los alumnos durante las clases?"
+        }
+      ],
+      "collectionId": "Juan"
+    }
+  ]
+}

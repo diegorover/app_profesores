@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas para la colección "Profesores"
+    match /Profesores/{profesorId} {
+      // Solo permitir acceso si el usuario está autenticado
+      allow read, write: if request.auth != null;
+
+      // Reglas específicas para los documentos de profesores
+      allow read, write: if request.auth != null &&
+                          // Verificar que el documento tenga el campo "Asignatura" con valor "Lengua"
+                          resource.data.Asignatura == "Lengua" &&
+                          // Verificar que el campo "Array.Preguntas" tenga un tamaño de al menos 5
+                          resource.data.Array.Preguntas.size() == 5 &&
+                          // Verificar que cada pregunta tenga el texto correcto
+                          resource.data.Array.Preguntas[0] == "¿Crees que el docente se ha ajustado a los objetivos de la asignatura?" &&
+                          resource.data.Array.Preguntas[1] == "¿El trato del docente a los alumnos es adecuado?" &&
+                          resource.data.Array.Preguntas[2] == "¿Consideras que los métodos de enseñanza utilizados por el docente son efectivos para tu aprendizaje?" &&
+                          resource.data.Array.Preguntas[3] == "¿El docente demuestra conocimiento y dominio sobre los temas impartidos en clase?" &&
+                          resource.data.Array.Preguntas[4] == "¿El docente fomenta la participación activa de los alumnos durante las clases?";
+    }
+  }
+}
