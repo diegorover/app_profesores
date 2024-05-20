@@ -14,6 +14,7 @@ dependencies:
   qr_code_scanner: ^1.0.1
   cupertino_icons: ^1.0.6
   firebase_core:
+  firebase_auth:
   cloud_firestore:
   provider: ^6.1.2
 
