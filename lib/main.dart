@@ -1,106 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'firebase_service.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: HomePage(),
+    return const MaterialApp(
+      title: 'Material App',
+      home: Home(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  final TextEditingController _controller = TextEditingController();
+class Home extends StatefulWidget {
+  const Home({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Inicio'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Ingresa el número 1:',
-            ),
-            SizedBox(height: 10),
-            Container(
-              width: 200,
-              child: TextField(
-                controller: _controller,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_controller.text == '1') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfessorsPage()),
-                  );
-                }
-              },
-              child: Text('Enviar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<Home> createState() => _HomeState();
 }
 
-class ProfessorsPage extends StatelessWidget {
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profesores'),
+        title: const Text('Material App Bar'),
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('Profesores').doc('Juan').snapshots(),
-        builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: getProfesores(),
+        builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay profesores disponibles.'));
+          } else {
+            final profesores = snapshot.data!;
+            return ListView.builder(
+              itemCount: profesores.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(profesores[index]['nombre'] ?? 'Sin nombre'),
+                );
+              },
+            );
           }
-
-          if (!snapshot.hasData || snapshot.data!.data() == null) {
-            return Center(child: Text('No se encontraron datos'));
-          }
-
-          var data = snapshot.data!.data() as Map<String, dynamic>?;
-
-          if (data == null || data.isEmpty) {
-            return Center(child: Text('No se encontraron datos'));
-          }
-
-          return ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (BuildContext context, int index) {
-              var keys = data.keys.toList();
-              var key = keys[index];
-              var value = data[key];
-              return ListTile(
-                title: Text('$key: $value'),
-              );
-            },
-          );
         },
       ),
     );

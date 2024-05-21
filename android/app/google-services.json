@@ -24,7 +24,26 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901137107375:android:03ac0b627a10400130875a",
+        "android_client_info": {
+          "package_name": "com.mycompany.profesores"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaltf6CC6cfGWebuVtAzktq7FdfgeG7LU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"
-}
+}}
