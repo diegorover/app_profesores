@@ -1,5 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+Future<void> saveRespuestas(Map<String, String> respuestas, String userId) async {
+  final docRef = FirebaseFirestore.instance.collection('profesores').doc('Respuestas_Lengua');
+  final userDocRef = docRef.collection('users').doc(userId);
+
+  final docSnapshot = await userDocRef.get();
+
+  if (docSnapshot.exists && (docSnapshot.data() != null)) {
+    throw Exception('Cuestionario ya realizado');
+  } else {
+    await userDocRef.set({'respuestas': respuestas});
+  }
+}
+
 // Función para obtener las preguntas del documento "Lengua"
 Future<List<String>> getPreguntas() async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc('lengua');
@@ -15,34 +28,3 @@ Future<List<String>> getPreguntas() async {
   }
   return [];
 }
-
-// Función para guardar las respuestas en Firestore
-Future<void> saveRespuestas(Map<String, String> respuestas) async {
-  final docRef = FirebaseFirestore.instance.collection('profesores').doc('Respuestas_Lengua');
-  final docSnapshot = await docRef.get();
-
-  int newFieldNumber = 1;
-  if (docSnapshot.exists) {
-    final data = docSnapshot.data();
-    if (data != null) {
-      // Encuentra el mayor número actual de 'Respuestas'
-      for (var key in data.keys) {
-        if (key.startsWith('Respuestas')) {
-          final number = int.tryParse(key.replaceFirst('Respuestas', ''));
-          if (number != null && number >= newFieldNumber) {
-            newFieldNumber = number + 1;
-          }
-        }
-      }
-    }
-  }
-
-  // Nombre del nuevo campo de respuestas
-  final newFieldName = 'Respuestas$newFieldNumber';
-
-  // Actualiza el documento con el nuevo campo de respuestas
-  await docRef.update({
-    newFieldName: respuestas,
-  });
-}
-
