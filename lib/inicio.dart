@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'firebase_service_matematicas.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
-import 'firebase_service_lengua.dart';
-
-// Añadir esta función para verificar si el cuestionario ya ha sido completado
-Future<bool> isCuestionarioCompletado(String codigo) async {
-  // Aquí debes agregar la lógica para verificar en Firestore si el cuestionario ya ha sido completado
-  // Por ejemplo, podrías verificar si existe un documento con el código correspondiente en una colección de respuestas.
-  // Devuelve true si el cuestionario está completado, de lo contrario, devuelve false.
-}
 
 class Inicio extends StatefulWidget {
-  const Inicio({Key? key}) : super(key: key);
+  const Inicio({super.key});
 
   @override
   State<Inicio> createState() => _InicioState();
@@ -21,32 +14,55 @@ class _InicioState extends State<Inicio> {
   final TextEditingController _codeController = TextEditingController();
 
   void _navigateToHome() async {
-    bool cuestionarioCompletado = await isCuestionarioCompletado(_codeController.text);
-    if (_codeController.text == '1') {
-      if (cuestionarioCompletado) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cuestionario ya realizado')),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-        );
-      }
-    } else if (_codeController.text == '2') {
-      if (cuestionarioCompletado) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cuestionario ya realizado')),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeMatematicas()),
-        );
-      }
-    } else {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Código incorrecto')),
+        const SnackBar(content: Text('Error: usuario no autenticado')),
+      );
+      return;
+    }
+
+    String code = _codeController.text.trim();
+
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, ingresa un código')),
+      );
+      return;
+    }
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+          .collection('materias')
+          .doc(code)
+          .get();
+
+      if (snapshot.exists) {
+        String subject = snapshot.data()?['subject'] ?? '';
+
+        if (subject == 'lengua') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Home()),
+          );
+        } else if (subject == 'matematicas') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeMatematicas()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Código de materia no válido')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Código de materia no encontrado')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al buscar el código: $e')),
       );
     }
   }
@@ -55,7 +71,7 @@ class _InicioState extends State<Inicio> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ingresa el código del cuestionario'),
+        title: const Text('Inicio'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,15 +79,15 @@ class _InicioState extends State<Inicio> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Ingresa el código del cuestionario',
-              style: TextStyle(fontSize: 24),
+              'Ingrese el código de la materia:',
+              style: TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _codeController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Código',
+                hintText: 'Código de la materia',
               ),
             ),
             const SizedBox(height: 16),
@@ -91,4 +107,5 @@ class _InicioState extends State<Inicio> {
     super.dispose();
   }
 }
+
 
