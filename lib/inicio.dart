@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'descargar_respuestas_matematicas.dart';
-import 'descargar_respuestas.dart'; // Importa también el widget de DescargarRespuestas para Lengua
+import 'seleccion_profesor.dart';
 
 class Inicio extends StatefulWidget {
-  const Inicio({Key? key}) : super(key: key);
+  const Inicio({super.key});
 
   @override
   State<Inicio> createState() => _InicioState();
@@ -12,24 +11,18 @@ class Inicio extends StatefulWidget {
 class _InicioState extends State<Inicio> {
   final TextEditingController _codeController = TextEditingController();
 
-  void _navigateToHome() {
-    if (_codeController.text == '1') {
-      Navigator.pushReplacement(
+  void _navigateToProfesorSelection() {
+    final asignatura = _codeController.text.trim();
+    if (asignatura.isNotEmpty) {
+      Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DescargarRespuestas(profesor: 'Juan', trimestre: 1),
-        ),
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DescargarRespuestasMatematicas(profesor: 'Ana', trimestre: 1),
+          builder: (context) => SeleccionProfesor(asignatura: asignatura),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Código incorrecto')),
+        const SnackBar(content: Text('Por favor, ingresa una asignatura.')),
       );
     }
   }
@@ -38,7 +31,7 @@ class _InicioState extends State<Inicio> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ingresa el código del cuestionario'),
+        title: const Text('Ingresa la asignatura'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -46,7 +39,7 @@ class _InicioState extends State<Inicio> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Ingresa el código del cuestionario',
+              'Ingresa la asignatura',
               style: TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 16),
@@ -54,12 +47,12 @@ class _InicioState extends State<Inicio> {
               controller: _codeController,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Código',
+                labelText: 'Asignatura',
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _navigateToHome,
+              onPressed: _navigateToProfesorSelection,
               child: const Text('Ingresar'),
             ),
           ],
@@ -74,4 +67,3 @@ class _InicioState extends State<Inicio> {
     super.dispose();
   }
 }
-
