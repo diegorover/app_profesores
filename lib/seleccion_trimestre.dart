@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'cuestionario.dart';
+import 'descargar_respuestas.dart';
 
 class SeleccionTrimestre extends StatelessWidget {
   final String asignatura;
@@ -13,6 +14,52 @@ class SeleccionTrimestre extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => Cuestionario(asignatura: asignatura, profesor: profesor, trimestre: trimestre),
       ),
+    );
+  }
+
+  void _navigateToDescargarRespuestas(BuildContext context, int trimestre) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DescargarRespuestas(profesor: profesor, trimestre: trimestre),
+      ),
+    );
+  }
+
+  void _showTrimestreDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Selecciona un trimestre para descargar'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('1º Trimestre'),
+                onTap: () {
+                  _navigateToDescargarRespuestas(context, 1);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: const Text('2º Trimestre'),
+                onTap: () {
+                  _navigateToDescargarRespuestas(context, 2);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                title: const Text('3º Trimestre'),
+                onTap: () {
+                  _navigateToDescargarRespuestas(context, 3);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -38,10 +85,14 @@ class SeleccionTrimestre extends StatelessWidget {
               onPressed: () => _navigateToCuestionario(context, 3),
               child: const Text('3º Trimestre'),
             ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _showTrimestreDialog(context),
+              child: const Text('Descargar respuestas'),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
