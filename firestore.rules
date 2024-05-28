@@ -1,22 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Reglas para la colección "profesores"
-    match /profesores/{documentId} {
-      // Permitir leer documentos en la colección "profesores" sin autenticación
-      allow read: if true;
-
-      // Permitir escribir documentos en la colección "profesores" sin autenticación
-      allow write: if true;
-
-      // Reglas específicas para el documento "Lengua" dentro de la colección "profesores"
-      match /lengua {
-        // Permitir leer el documento "Lengua" sin autenticación
-        allow read: if true;
-
-        // Permitir escribir en el documento "Lengua" sin autenticación
-        allow write: if true && resource.data.nombre == "Juan";
-      }
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
+

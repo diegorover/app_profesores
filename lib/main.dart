@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'inicio.dart';
 import 'cuestionario.dart';
-import 'descargar_respuestas.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Material App',
       home: Inicio(), // Cambia la pantalla inicial a Inicio
     );

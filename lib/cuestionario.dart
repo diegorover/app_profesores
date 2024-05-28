@@ -64,7 +64,7 @@ class _CuestionarioState extends State<Cuestionario> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const Inicio()), // Redirigir a la página de inicio
+        MaterialPageRoute(builder: (context) => Inicio()), // Redirigir a la página de inicio
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar respuestas: $e')));

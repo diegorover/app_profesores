@@ -5,7 +5,7 @@ import 'inicio.dart';
 class Preguntas extends StatefulWidget {
   final String asignatura;
   final String profesor;
-  final String trimestre;
+  final int trimestre;
 
   const Preguntas({
     Key? key,
@@ -22,14 +22,20 @@ class _PreguntasState extends State<Preguntas> {
   final Map<String, TextEditingController> _controllers = {};
 
   Future<List<String>> getPreguntas() async {
-    final docRef = FirebaseFirestore.instance.collection('profesores').doc(widget.asignatura);
+    final docRef = FirebaseFirestore.instance
+        .collection('profesores')
+        .doc('4kReqVo85w4yVWcviLGB')
+        .collection('Asignaturas')
+        .doc(widget.asignatura)
+        .collection(widget.asignatura)
+        .doc('Trimestre ${widget.trimestre}');
     final docSnapshot = await docRef.get();
 
     if (docSnapshot.exists) {
       final data = docSnapshot.data();
-      if (data != null && data.containsKey(widget.trimestre)) {
-        List<String> preguntas = List<String>.from(data[widget.trimestre]);
-        return preguntas.length > 5 ? preguntas.sublist(0, 5) : preguntas;
+      if (data != null && data.containsKey('Preguntas')) {
+        List<String> preguntas = List<String>.from(data['Preguntas']);
+        return preguntas;
       }
     }
     return [];
@@ -56,7 +62,7 @@ class _PreguntasState extends State<Preguntas> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const Inicio()), // Redirigir a la página de inicio
+        MaterialPageRoute(builder: (context) => Inicio()), // Redirigir a la página de inicio
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar respuestas: $e')));
@@ -64,31 +70,28 @@ class _PreguntasState extends State<Preguntas> {
   }
 
   Future<void> saveRespuestas(Map<String, String> respuestas) async {
-    final docRef = FirebaseFirestore.instance.collection('profesores').doc('Respuestas_${widget.asignatura}_${widget.profesor}');
+    final docRef = FirebaseFirestore.instance
+        .collection('profesores')
+        .doc('4kReqVo85w4yVWcviLGB')
+        .collection('Asignaturas')
+        .doc(widget.asignatura)
+        .collection(widget.asignatura)
+        .doc('Trimestre ${widget.trimestre}');
+
     final docSnapshot = await docRef.get();
 
-    int newFieldNumber = 1;
+    List<Map<String, String>> respuestasList = [];
     if (docSnapshot.exists) {
       final data = docSnapshot.data();
-      if (data != null) {
-        // Encuentra el mayor número actual de 'Respuestas'
-        for (var key in data.keys) {
-          if (key.startsWith('Respuestas')) {
-            final number = int.tryParse(key.replaceFirst('Respuestas', ''));
-            if (number != null && number >= newFieldNumber) {
-              newFieldNumber = number + 1;
-            }
-          }
-        }
+      if (data != null && data.containsKey('Respuestas')) {
+        respuestasList = List<Map<String, String>>.from(data['Respuestas']);
       }
     }
 
-    // Nombre del nuevo campo de respuestas
-    final newFieldName = 'Respuestas$newFieldNumber';
+    respuestasList.add(respuestas);
 
-    // Actualiza el documento con el nuevo campo de respuestas
     await docRef.update({
-      newFieldName: respuestas,
+      'Respuestas': respuestasList,
     });
   }
 
