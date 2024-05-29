@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'firebase_service.dart';
 import 'inicio.dart';
 
 class Preguntas extends StatefulWidget {
+  final String profesorId;
   final String asignatura;
-  final String profesor;
-  final int trimestre;
+  final String trimestre;
 
   const Preguntas({
     Key? key,
+    required this.profesorId,
     required this.asignatura,
-    required this.profesor,
     required this.trimestre,
   }) : super(key: key);
 
@@ -21,24 +21,8 @@ class Preguntas extends StatefulWidget {
 class _PreguntasState extends State<Preguntas> {
   final Map<String, TextEditingController> _controllers = {};
 
-  Future<List<String>> getPreguntas() async {
-    final docRef = FirebaseFirestore.instance
-        .collection('profesores')
-        .doc('4kReqVo85w4yVWcviLGB')
-        .collection('Asignaturas')
-        .doc(widget.asignatura)
-        .collection(widget.asignatura)
-        .doc('Trimestre ${widget.trimestre}');
-    final docSnapshot = await docRef.get();
-
-    if (docSnapshot.exists) {
-      final data = docSnapshot.data();
-      if (data != null && data.containsKey('Preguntas')) {
-        List<String> preguntas = List<String>.from(data['Preguntas']);
-        return preguntas;
-      }
-    }
-    return [];
+  Future<List<String>> _getPreguntas() async {
+    return await getPreguntas(widget.profesorId);
   }
 
   Future<void> _submitRespuestas() async {
@@ -56,43 +40,17 @@ class _PreguntasState extends State<Preguntas> {
       return;
     }
 
-    final respuestas = _controllers.map((key, value) => MapEntry(key, value.text));
+    final respuestas = _controllers.values.map((controller) => controller.text).toList();
     try {
-      await saveRespuestas(respuestas);
+      await saveRespuestas(widget.profesorId, widget.asignatura, widget.trimestre, respuestas);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Inicio()), // Redirigir a la página de inicio
+        MaterialPageRoute(builder: (context) => const Inicio()), // Redirigir a la página de inicio
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al guardar respuestas: $e')));
     }
-  }
-
-  Future<void> saveRespuestas(Map<String, String> respuestas) async {
-    final docRef = FirebaseFirestore.instance
-        .collection('profesores')
-        .doc('4kReqVo85w4yVWcviLGB')
-        .collection('Asignaturas')
-        .doc(widget.asignatura)
-        .collection(widget.asignatura)
-        .doc('Trimestre ${widget.trimestre}');
-
-    final docSnapshot = await docRef.get();
-
-    List<Map<String, String>> respuestasList = [];
-    if (docSnapshot.exists) {
-      final data = docSnapshot.data();
-      if (data != null && data.containsKey('Respuestas')) {
-        respuestasList = List<Map<String, String>>.from(data['Respuestas']);
-      }
-    }
-
-    respuestasList.add(respuestas);
-
-    await docRef.update({
-      'Respuestas': respuestasList,
-    });
   }
 
   @override
@@ -100,10 +58,9 @@ class _PreguntasState extends State<Preguntas> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Responde las preguntas'),
-        automaticallyImplyLeading: false, // Deshabilitar el botón de regreso
       ),
       body: FutureBuilder<List<String>>(
-        future: getPreguntas(),
+        future: _getPreguntas(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -116,46 +73,48 @@ class _PreguntasState extends State<Preguntas> {
             for (var pregunta in preguntas) {
               _controllers[pregunta] = TextEditingController();
             }
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: preguntas.length,
-                    itemBuilder: (context, index) {
-                      final pregunta = preguntas[index];
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(pregunta),
-                            TextField(
-                              controller: _controllers[pregunta],
-                              decoration: const InputDecoration(
-                                hintText: 'Escribe tu respuesta aquí',
+
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: preguntas.length,
+                      itemBuilder: (context, index) {
+                        final pregunta = preguntas[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pregunta,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _controllers[pregunta],
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: _submitRespuestas,
-                  child: const Text('Enviar respuestas'),
-                ),
-              ],
+                  ElevatedButton(
+                    onPressed: _submitRespuestas,
+                    child: const Text('Guardar respuestas'),
+                  ),
+                ],
+              ),
             );
           }
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controllers.forEach((key, controller) => controller.dispose());
-    super.dispose();
   }
 }
