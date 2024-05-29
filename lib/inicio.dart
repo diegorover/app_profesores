@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'seleccion_profesor.dart';
+import 'firebase_service.dart';
 
 class Inicio extends StatefulWidget {
-  const Inicio({super.key});
+  const Inicio({Key? key}) : super(key: key);
 
   @override
   State<Inicio> createState() => _InicioState();
@@ -11,15 +12,22 @@ class Inicio extends StatefulWidget {
 class _InicioState extends State<Inicio> {
   final TextEditingController _profesorController = TextEditingController();
 
-  void _navigateToProfesorSelection() {
-    final profesor = _profesorController.text.trim();
-    if (profesor.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SeleccionProfesor(profesorId: '4kReqVo85w4yVWcviLGB'), // Actualiza según la lógica
-        ),
-      );
+  void _navigateToProfesorSelection() async {
+    final profesorNombre = _profesorController.text.trim();
+    if (profesorNombre.isNotEmpty) {
+      final profesorId = await getProfesorIdByNombre(profesorNombre);
+      if (profesorId != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SeleccionProfesor(profesorId: profesorId),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El profesor no existe en la base de datos.')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, ingresa el nombre del profesor.')),

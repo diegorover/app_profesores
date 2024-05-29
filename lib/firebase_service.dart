@@ -1,29 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Función para obtener los nombres de las asignaturas dentro de un documento de profesor
-Future<List<String>> getAsignaturas(String profesorId) async {
-  final profesorDocRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
-  final snapshot = await profesorDocRef.get();
+Future<String?> getProfesorIdByNombre(String nombre) async {
+  final profesoresCollection = FirebaseFirestore.instance.collection('profesores');
+  final querySnapshot = await profesoresCollection.doc('4kReqVo85w4yVWcviLGB').collection('Datos del Profesor').where('Nombre', isEqualTo: nombre).get();
 
-  if (!snapshot.exists) {
-    return [];
+  if (querySnapshot.docs.isNotEmpty) {
+    return querySnapshot.docs.first.id;
   }
 
-  final asignaturas = await FirebaseFirestore.instance
-      .collection('profesores')
-      .doc(profesorId)
-      .get()
-      .then((doc) => doc.reference.collection('Asignaturas').get());
-
-  List<String> asignaturasList = [];
-  for (var doc in asignaturas.docs) {
-    asignaturasList.add(doc.id);
+  // Si no se encontraron coincidencias, intenta buscar en minúsculas
+  final querySnapshotLowerCase = await profesoresCollection.doc('4kReqVo85w4yVWcviLGB').collection('Datos del Profesor').where('Nombre', isEqualTo: nombre.toLowerCase()).get();
+  if (querySnapshotLowerCase.docs.isNotEmpty) {
+    return querySnapshotLowerCase.docs.first.id;
   }
 
-  return asignaturasList;
+  return null;
 }
 
-// Función para obtener las preguntas del profesor
+Future<List<String>> getAsignaturas(String profesorId) async {
+  final asignaturasCollection = FirebaseFirestore.instance.collection('profesores').doc(profesorId).collection('Asignaturas');
+  final asignaturasSnapshot = await asignaturasCollection.get();
+
+  List<String> asignaturas = [];
+  for (var doc in asignaturasSnapshot.docs) {
+    asignaturas.add(doc.id);
+  }
+  return asignaturas;
+}
+
 Future<List<String>> getPreguntas(String profesorId) async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
   final docSnapshot = await docRef.get();
@@ -38,21 +42,14 @@ Future<List<String>> getPreguntas(String profesorId) async {
   return [];
 }
 
-// Función para guardar las respuestas en Firestore
 Future<void> saveRespuestas(String profesorId, String asignatura, String trimestre, List<String> respuestas) async {
-  final asignaturaDocRef = FirebaseFirestore.instance
+  final docRef = FirebaseFirestore.instance
       .collection('profesores')
       .doc(profesorId)
       .collection('Asignaturas')
-      .doc(asignatura); // Utilizar el nombre de la asignatura proporcionado
+      .doc(asignatura)
+      .collection(trimestre)
+      .doc();
 
-  final snapshot = await asignaturaDocRef.get();
-
-  if (snapshot.exists) {
-    final trimestreDocId = snapshot.data()![trimestre];
-    if (trimestreDocId != null) {
-      final trimestreDocRef = asignaturaDocRef.collection('collections').doc(trimestreDocId);
-      await trimestreDocRef.update({trimestre: FieldValue.arrayUnion(respuestas)});
-    }
-  }
+  await docRef.set({'respuestas': respuestas});
 }
