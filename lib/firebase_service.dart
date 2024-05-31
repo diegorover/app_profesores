@@ -18,17 +18,20 @@ Future<String?> getProfesorIdByNombre(String nombre) async {
 }
 
 Future<List<String>> getAsignaturas(String profesorId) async {
-  final asignaturasCollection = FirebaseFirestore.instance.collection('profesores').doc(profesorId).collection('Asignaturas');
-  final asignaturasSnapshot = await asignaturasCollection.get();
+  final docRef = FirebaseFirestore.instance.collection('profesores').doc('4kReqVo85w4yVWcviLGB');
+  final docSnapshot = await docRef.get();
 
-  List<String> asignaturas = [];
-  for (var doc in asignaturasSnapshot.docs) {
-    asignaturas.add(doc.id);
+  if (docSnapshot.exists) {
+    final data = docSnapshot.data();
+    if (data != null && data.containsKey('TipoAsig')) {
+      List<String> asignaturas = List<String>.from(data['TipoAsig']);
+      return asignaturas;
+    }
   }
-  return asignaturas;
+  return [];
 }
 
-Future<List<String>> getPreguntas(String profesorId) async {
+Future<List<String>> getPreguntas(String profesorId, String asignatura, String trimestre) async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
   final docSnapshot = await docRef.get();
 

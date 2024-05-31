@@ -22,7 +22,7 @@ class _PreguntasState extends State<Preguntas> {
   final Map<String, TextEditingController> _controllers = {};
 
   Future<List<String>> _getPreguntas() async {
-    return await getPreguntas(widget.profesorId);
+    return await getPreguntas(widget.profesorId, widget.asignatura, widget.trimestre);
   }
 
   Future<void> _submitRespuestas() async {
@@ -116,5 +116,11 @@ class _PreguntasState extends State<Preguntas> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controllers.forEach((key, controller) => controller.dispose());
+    super.dispose();
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'inicio.dart';
-import 'asignaturas_screen.dart';
 import 'cuestionario.dart';
 
 
