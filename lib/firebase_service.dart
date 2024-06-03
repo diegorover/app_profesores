@@ -1,22 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<String?> getProfesorIdByNombre(String nombre) async {
-  final profesoresCollection = FirebaseFirestore.instance.collection('profesores');
-  final querySnapshot = await profesoresCollection.doc('4kReqVo85w4yVWcviLGB').collection('Datos del Profesor').where('Nombre', isEqualTo: nombre).get();
-
-  if (querySnapshot.docs.isNotEmpty) {
-    return querySnapshot.docs.first.id;
-  }
-
-  // Si no se encontraron coincidencias, intenta buscar en minúsculas
-  final querySnapshotLowerCase = await profesoresCollection.doc('4kReqVo85w4yVWcviLGB').collection('Datos del Profesor').where('Nombre', isEqualTo: nombre.toLowerCase()).get();
-  if (querySnapshotLowerCase.docs.isNotEmpty) {
-    return querySnapshotLowerCase.docs.first.id;
-  }
-
-  return null;
-}
-
+// Función para obtener las asignaturas de un profesor específico
 Future<List<String>> getAsignaturas(String profesorId) async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc('4kReqVo85w4yVWcviLGB');
   final docSnapshot = await docRef.get();
@@ -31,6 +15,7 @@ Future<List<String>> getAsignaturas(String profesorId) async {
   return [];
 }
 
+// Función para obtener las preguntas del profesor
 Future<List<String>> getPreguntas(String profesorId, String asignatura, String trimestre) async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
   final docSnapshot = await docRef.get();
@@ -45,6 +30,7 @@ Future<List<String>> getPreguntas(String profesorId, String asignatura, String t
   return [];
 }
 
+// Función para guardar las respuestas en Firestore
 Future<void> saveRespuestas(String profesorId, String asignatura, String trimestre, List<String> respuestas) async {
   final docRef = FirebaseFirestore.instance
       .collection('profesores')
