@@ -86,7 +86,7 @@ Future<void> calcularYGuardarMedia(String profesorId, String asignatura, String 
   }
 }
 
-// Nueva función para recopilar todas las respuestas de todos los trimestres de todas las asignaturas y copiarlas a la ruta especificada
+// Nueva función para recopilar la última respuesta de todos los trimestres de todas las asignaturas y copiarlas a la ruta especificada
 Future<void> copiarRespuestasAValoraciones(String profesorId) async {
   final asignaturas = await getAsignaturas(profesorId);
 
@@ -99,9 +99,10 @@ Future<void> copiarRespuestasAValoraciones(String profesorId) async {
           .doc(asignatura)
           .collection('Trimestre $trimestre');
 
-      final querySnapshot = await collectionRef.get();
+      final querySnapshot = await collectionRef.orderBy('timestamp', descending: true).limit(1).get();
 
-      for (var doc in querySnapshot.docs) {
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
         final respuestas = doc.data()['respuestas'] ?? [];
         final respuestasNum = doc.data()['respuestasNum'] ?? [];
 
@@ -113,21 +114,9 @@ Future<void> copiarRespuestasAValoraciones(String profesorId) async {
             .collection(asignatura)
             .doc('Trimestre $trimestre');
 
-        final existingData = await valoracionesDocRef.get();
-        List<dynamic> existingRespuestas = [];
-        List<dynamic> existingRespuestasNum = [];
-
-        if (existingData.exists) {
-          existingRespuestas = existingData.data()?['respuestas'] ?? [];
-          existingRespuestasNum = existingData.data()?['respuestasNum'] ?? [];
-        }
-
-        existingRespuestas.addAll(respuestas);
-        existingRespuestasNum.addAll(respuestasNum);
-
         await valoracionesDocRef.set({
-          'respuestas': existingRespuestas,
-          'respuestasNum': existingRespuestasNum,
+          'respuestas': respuestas,
+          'respuestasNum': respuestasNum,
         });
       }
     }
