@@ -20,6 +20,7 @@ class Preguntas extends StatefulWidget {
 
 class _PreguntasState extends State<Preguntas> {
   final Map<String, TextEditingController> _controllers = {};
+  final Map<String, String> _selectedValues = {};
 
   Future<List<String>> _getPreguntas() async {
     return await getPreguntas(widget.profesorId, widget.asignatura, widget.trimestre);
@@ -33,6 +34,12 @@ class _PreguntasState extends State<Preguntas> {
       }
     });
 
+    _selectedValues.forEach((key, value) {
+      if (value.isEmpty) {
+        allFilled = false;
+      }
+    });
+
     if (!allFilled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, responde todas las preguntas.')),
@@ -40,7 +47,11 @@ class _PreguntasState extends State<Preguntas> {
       return;
     }
 
-    final respuestas = _controllers.values.map((controller) => controller.text).toList();
+    final respuestas = [
+      ..._controllers.values.map((controller) => controller.text),
+      ..._selectedValues.values,
+    ];
+
     try {
       await saveRespuestas(widget.profesorId, widget.asignatura, widget.trimestre, respuestas);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
@@ -71,7 +82,11 @@ class _PreguntasState extends State<Preguntas> {
           } else {
             final preguntas = snapshot.data!;
             for (var pregunta in preguntas) {
-              _controllers[pregunta] = TextEditingController();
+              if (!pregunta.startsWith('Num')) { // Assuming 'Num' prefix for numeric questions
+                _controllers[pregunta] = TextEditingController();
+              } else {
+                _selectedValues[pregunta] = '';
+              }
             }
 
             return Padding(
@@ -93,12 +108,29 @@ class _PreguntasState extends State<Preguntas> {
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 8),
-                              TextField(
-                                controller: _controllers[pregunta],
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
+                              if (pregunta.startsWith('Num')) // Check if the question is numeric
+                                DropdownButton<String>(
+                                  value: _selectedValues[pregunta],
+                                  items: List.generate(10, (i) => (i + 1).toString())
+                                      .map((value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ))
+                                      .toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      _selectedValues[pregunta] = newValue ?? '';
+                                    });
+                                  },
+                                  hint: const Text('Selecciona un número del 1 al 10'),
+                                )
+                              else
+                                TextField(
+                                  controller: _controllers[pregunta],
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         );
