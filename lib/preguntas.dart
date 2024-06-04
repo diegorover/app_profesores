@@ -47,13 +47,11 @@ class _PreguntasState extends State<Preguntas> {
       return;
     }
 
-    final respuestas = [
-      ..._controllers.values.map((controller) => controller.text),
-      ..._selectedValues.values,
-    ];
+    final respuestas = _controllers.values.map((controller) => controller.text).toList();
+    final respuestasNum = _selectedValues.values.toList();
 
     try {
-      await saveRespuestas(widget.profesorId, widget.asignatura, widget.trimestre, respuestas);
+      await saveRespuestas(widget.profesorId, widget.asignatura, widget.trimestre, respuestas, respuestasNum);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
       Navigator.pushReplacement(
         context,

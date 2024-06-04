@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 
 // Función para obtener las asignaturas de un profesor específico
 Future<List<String>> getAsignaturas(String profesorId) async {
@@ -21,32 +20,24 @@ Future<List<String>> getPreguntas(String profesorId, String asignatura, String t
   final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
   final docSnapshot = await docRef.get();
 
-  List<String> preguntas = [];
-  List<String> preguntasNum = [];
-
   if (docSnapshot.exists) {
     final data = docSnapshot.data();
     if (data != null) {
+      List<String> preguntas = [];
       if (data.containsKey('Preguntas')) {
-        preguntas = List<String>.from(data['Preguntas']);
+        preguntas.addAll(List<String>.from(data['Preguntas']));
       }
-      TextInputType.number;
       if (data.containsKey('PreguntasNum')) {
-        preguntasNum = List<String>.from(data['PreguntasNum']);
+        preguntas.addAll(List<String>.from(data['PreguntasNum']));
       }
+      return preguntas.length > 10 ? preguntas.sublist(0, 10) : preguntas;
     }
   }
-
-  // Limitar a 5 preguntas
-  preguntas = preguntas.length > 5 ? preguntas.sublist(0, 5) : preguntas;
-  preguntasNum = preguntasNum.length > 5 ? preguntasNum.sublist(0, 5) : preguntasNum;
-
-  // Combinamos ambos tipos de preguntas
-  return [...preguntas, ...preguntasNum];
+  return [];
 }
 
 // Función para guardar las respuestas en Firestore
-Future<void> saveRespuestas(String profesorId, String asignatura, String trimestre, List<String> respuestas) async {
+Future<void> saveRespuestas(String profesorId, String asignatura, String trimestre, List<String> respuestas, List<String> respuestasNum) async {
   final docRef = FirebaseFirestore.instance
       .collection('profesores')
       .doc(profesorId)
@@ -55,6 +46,90 @@ Future<void> saveRespuestas(String profesorId, String asignatura, String trimest
       .collection(trimestre)
       .doc();
 
-  await docRef.set({'respuestas': respuestas});
+  await docRef.set({
+    'respuestas': respuestas,
+    'respuestasNum': respuestasNum.map((e) => int.parse(e)).toList(),
+  });
+
+  await calcularYGuardarMedia(profesorId, asignatura, trimestre);
 }
 
+// Función para calcular la media de las últimas 5 respuestas numéricas y guardarla en Firestore
+Future<void> calcularYGuardarMedia(String profesorId, String asignatura, String trimestre) async {
+  final collectionRef = FirebaseFirestore.instance
+      .collection('profesores')
+      .doc(profesorId)
+      .collection('Asignaturas')
+      .doc(asignatura)
+      .collection(trimestre);
+
+  final querySnapshot = await collectionRef.orderBy('timestamp', descending: true).limit(5).get();
+
+  List<int> ultimasRespuestas = [];
+  for (var doc in querySnapshot.docs) {
+    List<int> respuestasNum = List<int>.from(doc.data()['respuestasNum'] ?? []);
+    ultimasRespuestas.addAll(respuestasNum);
+  }
+
+  if (ultimasRespuestas.isNotEmpty) {
+    double media = ultimasRespuestas.reduce((a, b) => a + b) / ultimasRespuestas.length;
+
+    final valoracionesDocRef = FirebaseFirestore.instance
+        .collection('profesores')
+        .doc(profesorId)
+        .collection('Asignaturas')
+        .doc('Valoraciones')
+        .collection(asignatura)
+        .doc('Trimestre $trimestre');
+
+    await valoracionesDocRef.set({'media': media});
+  }
+}
+
+// Nueva función para recopilar todas las respuestas de todos los trimestres de todas las asignaturas y copiarlas a la ruta especificada
+Future<void> copiarRespuestasAValoraciones(String profesorId) async {
+  final asignaturas = await getAsignaturas(profesorId);
+
+  for (final asignatura in asignaturas) {
+    for (int trimestre = 1; trimestre <= 3; trimestre++) {
+      final collectionRef = FirebaseFirestore.instance
+          .collection('profesores')
+          .doc(profesorId)
+          .collection('Asignaturas')
+          .doc(asignatura)
+          .collection('Trimestre $trimestre');
+
+      final querySnapshot = await collectionRef.get();
+
+      for (var doc in querySnapshot.docs) {
+        final respuestas = doc.data()['respuestas'] ?? [];
+        final respuestasNum = doc.data()['respuestasNum'] ?? [];
+
+        final valoracionesDocRef = FirebaseFirestore.instance
+            .collection('profesores')
+            .doc(profesorId)
+            .collection('Asignaturas')
+            .doc('Valoraciones')
+            .collection(asignatura)
+            .doc('Trimestre $trimestre');
+
+        final existingData = await valoracionesDocRef.get();
+        List<dynamic> existingRespuestas = [];
+        List<dynamic> existingRespuestasNum = [];
+
+        if (existingData.exists) {
+          existingRespuestas = existingData.data()?['respuestas'] ?? [];
+          existingRespuestasNum = existingData.data()?['respuestasNum'] ?? [];
+        }
+
+        existingRespuestas.addAll(respuestas);
+        existingRespuestasNum.addAll(respuestasNum);
+
+        await valoracionesDocRef.set({
+          'respuestas': existingRespuestas,
+          'respuestasNum': existingRespuestasNum,
+        });
+      }
+    }
+  }
+}
