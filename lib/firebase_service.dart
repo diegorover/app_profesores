@@ -1,20 +1,5 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// Función para obtener las asignaturas de un profesor específico
-Future<List<String>> getAsignaturas(String profesorId) async {
-  final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
-  final docSnapshot = await docRef.get();
-
-  if (docSnapshot.exists) {
-    final data = docSnapshot.data();
-    if (data != null && data.containsKey('TipoAsig')) {
-      List<String> asignaturas = List<String>.from(data['TipoAsig']);
-      return asignaturas;
-    }
-  }
-  return [];
-}
-
 // Función para obtener las preguntas del profesor
 Future<List<String>> getPreguntas(String profesorId, String asignatura, String trimestre) async {
   final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
@@ -35,6 +20,20 @@ Future<List<String>> getPreguntas(String profesorId, String asignatura, String t
   }
   return [];
 }
+// Función para obtener las asignaturas de un profesor específico
+Future<List<String>> getAsignaturas(String profesorId) async {
+  final docRef = FirebaseFirestore.instance.collection('profesores').doc(profesorId);
+  final docSnapshot = await docRef.get();
+
+  if (docSnapshot.exists) {
+    final data = docSnapshot.data();
+    if (data != null && data.containsKey('TipoAsig')) {
+      List<String> asignaturas = List<String>.from(data['TipoAsig']);
+      return asignaturas;
+    }
+  }
+  return [];
+}
 
 // Función para guardar las respuestas en Firestore
 Future<void> saveRespuestas(String profesorId, String asignatura, String trimestre, List<String> respuestas, List<String> respuestasNum) async {
@@ -49,6 +48,7 @@ Future<void> saveRespuestas(String profesorId, String asignatura, String trimest
   await docRef.set({
     'respuestas': respuestas,
     'respuestasNum': respuestasNum.map((e) => int.parse(e)).toList(),
+    'timestamp': FieldValue.serverTimestamp()
   });
 
   await calcularYGuardarMedia(profesorId, asignatura, trimestre);
@@ -74,51 +74,14 @@ Future<void> calcularYGuardarMedia(String profesorId, String asignatura, String 
   if (ultimasRespuestas.isNotEmpty) {
     double media = ultimasRespuestas.reduce((a, b) => a + b) / ultimasRespuestas.length;
 
-    final valoracionesDocRef = FirebaseFirestore.instance
+    final mediaDocRef = FirebaseFirestore.instance
         .collection('profesores')
         .doc(profesorId)
         .collection('Asignaturas')
-        .doc('Valoraciones')
-        .collection(asignatura)
-        .doc('Trimestre $trimestre');
+        .doc(asignatura)
+        .collection(trimestre)
+        .doc('0-Media');
 
-    await valoracionesDocRef.set({'media': media});
-  }
-}
-
-// Nueva función para recopilar la última respuesta de todos los trimestres de todas las asignaturas y copiarlas a la ruta especificada
-Future<void> copiarRespuestasAValoraciones(String profesorId) async {
-  final asignaturas = await getAsignaturas(profesorId);
-
-  for (final asignatura in asignaturas) {
-    for (int trimestre = 1; trimestre <= 3; trimestre++) {
-      final collectionRef = FirebaseFirestore.instance
-          .collection('profesores')
-          .doc(profesorId)
-          .collection('Asignaturas')
-          .doc(asignatura)
-          .collection('Trimestre $trimestre');
-
-      final querySnapshot = await collectionRef.orderBy('timestamp', descending: true).limit(1).get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final respuestas = doc.data()['respuestas'] ?? [];
-        final respuestasNum = doc.data()['respuestasNum'] ?? [];
-
-        final valoracionesDocRef = FirebaseFirestore.instance
-            .collection('profesores')
-            .doc(profesorId)
-            .collection('Asignaturas')
-            .doc('Valoraciones')
-            .collection(asignatura)
-            .doc('Trimestre $trimestre');
-
-        await valoracionesDocRef.set({
-          'respuestas': respuestas,
-          'respuestasNum': respuestasNum,
-        });
-      }
-    }
+    await mediaDocRef.set({'media': media});
   }
 }

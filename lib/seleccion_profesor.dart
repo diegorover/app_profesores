@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'seleccion_trimestre.dart';
-import 'firebase_service.dart';
+import 'firebase_service.dart'; // Importamos firebase_service.dart
 
 class SeleccionProfesor extends StatelessWidget {
   final String profesorId;
@@ -9,7 +9,7 @@ class SeleccionProfesor extends StatelessWidget {
   const SeleccionProfesor({Key? key, required this.profesorId}) : super(key: key);
 
   Future<List<String>> _getAsignaturas() async {
-    return await getAsignaturas(profesorId);
+    return await getAsignaturas(profesorId); // Utilizamos el método getAsignaturas
   }
 
   @override

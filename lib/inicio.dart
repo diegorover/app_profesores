@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'firebase_service.dart';
 import 'seleccion_profesor.dart';
 
 class Inicio extends StatefulWidget {
@@ -26,13 +25,6 @@ class _InicioState extends State<Inicio> {
         const SnackBar(content: Text('Por favor, ingresa el nombre del profesor.')),
       );
     }
-  }
-
-  Future<void> _copiarRespuestas() async {
-    await copiarRespuestasAValoraciones('4kReqVo85w4yVWcviLGB');
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Respuestas copiadas exitosamente a Valoraciones'))
-    );
   }
 
   @override
@@ -62,11 +54,6 @@ class _InicioState extends State<Inicio> {
             ElevatedButton(
               onPressed: _navigateToProfesorSelection,
               child: const Text('Ingresar'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _copiarRespuestas,
-              child: const Text('Copiar Respuestas a Valoraciones'),
             ),
           ],
         ),
