@@ -80,37 +80,31 @@ Future<void> saveRespuestas(String profesorId, String asignatura, String trimest
 
 }
 
-Future<void> actualizarRespuesta1() async {
-  final String profesorId = '4kReqVo85w4yVWcviLGB';
-  final String asignatura = 'Lengua';
-  final String trimestre = 'Trimestre 1';
-  final String documentoId = '2lW8cex38W3dFwyvNbMh';
-
-  final documentRef = FirebaseFirestore.instance
+Future<void> guardarRespuestas(String profesorId) async {
+  final collectionRef = FirebaseFirestore.instance
       .collection('profesores')
       .doc(profesorId)
       .collection('Asignaturas')
-      .doc(asignatura)
-      .collection(trimestre)
-      .doc(documentoId);
+      .doc('Lengua')
+      .collection('Trimestre 1');
 
-  final documentSnapshot = await documentRef.get();
+  final querySnapshot = await collectionRef.get();
+  final respuestas = querySnapshot.docs.map((doc) {
+    final respuestas = doc['respuestas'] as List<dynamic>;
+    return respuestas.isNotEmpty ? respuestas[0].toString() : ''; // Obtener la primera respuesta del array
+  }).toList();
 
-  if (documentSnapshot.exists) {
-    final respuestas = documentSnapshot.data()!['respuestas'];
-    final valorPosicion0 = respuestas[0];
+  // Guardar las respuestas en 0_Media
+  final mediaDocRef = FirebaseFirestore.instance
+      .collection('profesores')
+      .doc(profesorId)
+      .collection('Asignaturas')
+      .doc('Lengua')
+      .collection('Trimestre 1')
+      .doc('0_Media');
 
-    final mediaDocRef = FirebaseFirestore.instance
-        .collection('profesores')
-        .doc(profesorId)
-        .collection('Asignaturas')
-        .doc(asignatura)
-        .collection(trimestre)
-        .doc('0_Media');
-
-    await mediaDocRef.set({'Respuesta1': valorPosicion0}, SetOptions(merge: true));
-    print('Valor de la posición 0 guardado en 0_Media con el nombre Respuesta1');
-  } else {
-    print('El documento $documentoId no existe en la ruta especificada');
+  for (int i = 0; i < respuestas.length; i++) {
+    final nombreCampo = 'Respuesta${i + 1}';
+    await mediaDocRef.update({nombreCampo: respuestas[i]});
   }
 }
