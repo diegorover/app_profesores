@@ -64,6 +64,7 @@ class _PreguntasState extends State<Preguntas> {
 
     try {
       await saveRespuestas(widget.profesorId, widget.asignatura, widget.trimestre, respuestas, respuestasNum);
+      await countDocumentsAndSave(widget.profesorId, widget.asignatura, widget.trimestre);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Respuestas guardadas exitosamente')));
       Navigator.pushReplacement(
         context,
@@ -77,92 +78,87 @@ class _PreguntasState extends State<Preguntas> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Responde las preguntas'),
-        ),
-        body: FutureBuilder<List<String>>(
-        future: _getPreguntas(),
-    builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-    return const Center(child: CircularProgressIndicator());
-    } else if (snapshot.hasError) {
-    return Center(child: Text('Error: ${snapshot.error}'));
-    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-    return const Center(child: Text('No hay preguntas disponibles.'));
-    } else {
-    final preguntas = snapshot.data!;
-    for (var pregunta in preguntas) {
-    if (!pregunta.startsWith('_num')) {
-    _controllers[pregunta] = TextEditingController();
-    } else {
-    _selectedValues[pregunta] = '';
-    }
-    }
-
-    return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-    children: [
-    Expanded(
-    child: ListView.builder(
-    itemCount: preguntas.length,
-    itemBuilder: (context, index) {
-    final pregunta = preguntas[index];
-    return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(
-    pregunta.startsWith('_num') ? pregunta.substring(5) : pregunta,
-    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-    ),
-    const SizedBox(height: 8),
-      if (pregunta.startsWith('_num')) // Check if the question is numeric
-        DropdownButton<String>(
-          value: _selectedValues[pregunta],
-          items: List.generate(10, (i) => (i + 1).toString())
-              .map((value) => DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          ))
-              .toList(),
-          onChanged: (newValue) {
-            setState(() {
-              _selectedValues[pregunta] = newValue ?? '';
-            });
-          },
-          hint: const Text('Selecciona un número del 1 al 10'),
-        )
-      else
-        TextField(
-          controller: _controllers[pregunta],
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-        ),
-    ],
-    ),
-    );
-    },
-    ),
-    ),
-      ElevatedButton(
-        onPressed: _submitRespuestas,
-        child: const Text('Guardar respuestas'),
+      appBar: AppBar(
+        title: const Text('Responde las preguntas'),
       ),
-    ],
-    ),
-    );
-    }
-    },
-        ),
-    );
-  }
+      body: FutureBuilder<List<String>>(
+        future: _getPreguntas(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay preguntas disponibles.'));
+          } else {
+            final preguntas = snapshot.data!;
+            for (var pregunta in preguntas) {
+              if (!pregunta.startsWith('_num')) {
+                _controllers[pregunta] = TextEditingController();
+              } else {
+                _selectedValues[pregunta] = '';
+              }
+            }
 
-  @override
-  void dispose() {
-    _controllers.forEach((key, controller) => controller.dispose());
-    super.dispose();
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: preguntas.length,
+                      itemBuilder: (context, index) {
+                        final pregunta = preguntas[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pregunta.startsWith('_num') ? pregunta.substring(5) : pregunta,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              if (pregunta.startsWith('_num')) // Check if the question is numeric
+                                DropdownButton<String>(
+                                  value: _selectedValues[pregunta],
+                                  items: List.generate(10, (i) => (i + 1).toString())
+                                      .map((value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ))
+                                      .toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      _selectedValues[pregunta] = newValue ?? '';
+                                    });
+                                  },
+                                  hint: const Text('Selecciona un número del 1 al 10'),
+                                )
+                              else
+                                TextField(
+                                  controller: _controllers[pregunta],
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText: 'Escribe tu respuesta aquí',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _submitRespuestas,
+                    child: const Text('Guardar respuestas'),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
+      ),
+    );
   }
 }
