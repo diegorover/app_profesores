@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'firebase_service.dart';
 import 'inicio.dart';
 
 class Cuestionario extends StatefulWidget {
@@ -71,6 +72,19 @@ class _CuestionarioState extends State<Cuestionario> {
     }
   }
 
+  void _guardarRespuestas(String asignatura, String trimestre) async {
+    try {
+      await countDocumentsAndSave('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+      await guardarPrimeraRespuestaEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+      await guardarPromedioDeRespuestasEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar respuestas: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +131,9 @@ class _CuestionarioState extends State<Cuestionario> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _submitRespuestas,
+                  onPressed: () {
+                    _submitRespuestas();
+                  },
                   child: const Text('Enviar respuestas'),
                 ),
               ],

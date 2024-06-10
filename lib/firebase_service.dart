@@ -13,7 +13,7 @@ Future<void> countDocumentsAndSave(String profesorId, String asignatura, String 
   final documentCount = querySnapshot.docs.length;
 
   // Restar uno al conteo total
-  final adjustedDocumentCount = documentCount - 1;
+  final adjustedDocumentCount = documentCount - 5;
 
   final mediaDocRef = FirebaseFirestore.instance
       .collection('profesores')
@@ -128,7 +128,7 @@ Future<void> guardarPromedioDeRespuestasEnMedia(String profesorId, String asigna
 
   final querySnapshot = await collectionRef.get();
   final List<int> sumaTotalPorPregunta = List.generate(5, (_) => 0);
-  int documentCount = querySnapshot.docs.length - 1; // Excluir los documentos '0_Media', '1_Media', etc.
+  int documentCount = querySnapshot.docs.length - 5; // Excluir los documentos '0_Media', '1_Media', etc.
 
   final List<List<int>> respuestasPorPregunta = List.generate(5, (_) => []);
 

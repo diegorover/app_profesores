@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'firebase_service.dart'; // Asegúrate de importar firebase_service.dart
 import 'seleccion_profesor.dart';
 
 class Inicio extends StatefulWidget {
-  const Inicio({super.key});
+  const Inicio({Key? key}) : super(key: key);
 
   @override
   State<Inicio> createState() => _InicioState();
@@ -11,6 +13,36 @@ class Inicio extends StatefulWidget {
 
 class _InicioState extends State<Inicio> {
   final TextEditingController _profesorController = TextEditingController();
+
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicia el temporizador
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    // Cancela el temporizador al salir de la pantalla
+    _timer.cancel();
+    super.dispose();
+  }
+
+  // Función para iniciar el temporizador
+  void _startTimer() {
+    // Crea un temporizador que se repite cada minuto
+    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+      // Llama a las funciones para guardar respuestas
+      _guardarRespuestas('Lengua', 'Trimestre 1');
+      _guardarRespuestas('Lengua', 'Trimestre 2');
+      _guardarRespuestas('Lengua', 'Trimestre 3');
+      _guardarRespuestas('Matematicas', 'Trimestre 1');
+      _guardarRespuestas('Matematicas', 'Trimestre 2');
+      _guardarRespuestas('Matematicas', 'Trimestre 3');
+    });
+  }
 
   void _navigateToProfesorSelection() {
     final profesor = _profesorController.text.trim();
@@ -28,26 +60,18 @@ class _InicioState extends State<Inicio> {
     }
   }
 
-  void _guardarRespuestas() async {
+  void _guardarRespuestas(String asignatura, String trimestre) async {
     try {
-      const String asignatura = 'Lengua';
-      const String trimestre = 'Trimestre 1';
-
       await countDocumentsAndSave('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
       await guardarPrimeraRespuestaEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
       await guardarPromedioDeRespuestasEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Respuestas guardadas exitosamente para Lengua en Trimestre 1')),
-      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al guardar respuestas: $e')),
       );
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +98,10 @@ class _InicioState extends State<Inicio> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _navigateToProfesorSelection,
+              onPressed: () {
+                _navigateToProfesorSelection();
+              },
               child: const Text('Ingresar'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _guardarRespuestas,
-              child: const Text('Guardar Respuestas'),
             ),
           ],
         ),
