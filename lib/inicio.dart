@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'firebase_service.dart'; // Asegúrate de importar firebase_service.dart
 import 'seleccion_profesor.dart';
 
 class Inicio extends StatefulWidget {
@@ -26,6 +27,27 @@ class _InicioState extends State<Inicio> {
       );
     }
   }
+
+  void _guardarRespuestas() async {
+    try {
+      const String asignatura = 'Lengua';
+      const String trimestre = 'Trimestre 1';
+
+      await countDocumentsAndSave('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+      await guardarPrimeraRespuestaEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+      await guardarPromedioDeRespuestasEnMedia('4kReqVo85w4yVWcviLGB', asignatura, trimestre);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Respuestas guardadas exitosamente para Lengua en Trimestre 1')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar respuestas: $e')),
+      );
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +77,14 @@ class _InicioState extends State<Inicio> {
               onPressed: _navigateToProfesorSelection,
               child: const Text('Ingresar'),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _guardarRespuestas,
+              child: const Text('Guardar Respuestas'),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _profesorController.dispose();
-    super.dispose();
   }
 }

@@ -77,34 +77,94 @@ Future<void> saveRespuestas(String profesorId, String asignatura, String trimest
     'respuestasNum': respuestasNum.map((e) => int.parse(e)).toList(),
     'timestamp': FieldValue.serverTimestamp()
   });
-
 }
 
-Future<void> guardarRespuestas(String profesorId) async {
+// Función para guardar todas las respuestas en los documentos correspondientes
+Future<void> guardarPrimeraRespuestaEnMedia(String profesorId, String asignatura, String trimestre) async {
   final collectionRef = FirebaseFirestore.instance
       .collection('profesores')
       .doc(profesorId)
       .collection('Asignaturas')
-      .doc('Lengua')
-      .collection('Trimestre 1');
+      .doc(asignatura)
+      .collection(trimestre);
 
   final querySnapshot = await collectionRef.get();
-  final respuestas = querySnapshot.docs.map((doc) {
-    final respuestas = doc['respuestas'] as List<dynamic>;
-    return respuestas.isNotEmpty ? respuestas[0].toString() : ''; // Obtener la primera respuesta del array
-  }).toList();
+  final List<List<String>> respuestasPorPregunta = List.generate(5, (_) => []);
 
-  // Guardar las respuestas en 0_Media
-  final mediaDocRef = FirebaseFirestore.instance
+  for (var doc in querySnapshot.docs) {
+    if (doc.data().containsKey('respuestas')) {
+      final respuestas = doc['respuestas'] as List<dynamic>;
+      for (int i = 0; i < respuestas.length && i < 5; i++) {
+        respuestasPorPregunta[i].add(respuestas[i].toString());
+      }
+    }
+  }
+
+  // Guardar las respuestas en los documentos correspondientes
+  for (int i = 0; i < respuestasPorPregunta.length; i++) {
+    final mediaDocRef = FirebaseFirestore.instance
+        .collection('profesores')
+        .doc(profesorId)
+        .collection('Asignaturas')
+        .doc(asignatura)
+        .collection(trimestre)
+        .doc('${i}_Media');
+
+    for (int j = 0; j < respuestasPorPregunta[i].length; j++) {
+      final nombreCampo = 'Respuesta${j + 1}';
+      await mediaDocRef.update({nombreCampo: respuestasPorPregunta[i][j]});
+    }
+  }
+}
+
+
+Future<void> guardarPromedioDeRespuestasEnMedia(String profesorId, String asignatura, String trimestre) async {
+  final collectionRef = FirebaseFirestore.instance
       .collection('profesores')
       .doc(profesorId)
       .collection('Asignaturas')
-      .doc('Lengua')
-      .collection('Trimestre 1')
-      .doc('0_Media');
+      .doc(asignatura)
+      .collection(trimestre);
 
-  for (int i = 0; i < respuestas.length; i++) {
-    final nombreCampo = 'Respuesta${i + 1}';
-    await mediaDocRef.update({nombreCampo: respuestas[i]});
+  final querySnapshot = await collectionRef.get();
+  final List<int> sumaTotalPorPregunta = List.generate(5, (_) => 0);
+  int documentCount = querySnapshot.docs.length - 1; // Excluir los documentos '0_Media', '1_Media', etc.
+
+  final List<List<int>> respuestasPorPregunta = List.generate(5, (_) => []);
+
+  for (var doc in querySnapshot.docs.where((doc) => !doc.id.contains('_Media'))) {
+    if (doc.data().containsKey('respuestas')) {
+      final respuestas = doc['respuestas'] as List<dynamic>;
+      for (int i = 0; i < respuestas.length && i < 5; i++) {
+        int respuesta = int.tryParse(respuestas[i].toString()) ?? 0;
+        respuestasPorPregunta[i].add(respuesta);
+        sumaTotalPorPregunta[i] += respuesta;
+      }
+    }
+  }
+
+  for (int i = 0; i < respuestasPorPregunta.length; i++) {
+    double media = documentCount > 0 ? sumaTotalPorPregunta[i] / documentCount : 0;
+
+    // Guardar la suma total y el promedio en el documento correspondiente
+    final mediaDocRef = FirebaseFirestore.instance
+        .collection('profesores')
+        .doc(profesorId)
+        .collection('Asignaturas')
+        .doc(asignatura)
+        .collection(trimestre)
+        .doc('${i}_Media');
+
+    await mediaDocRef.update({
+      '0_Media': media,
+      'sumaTotal': sumaTotalPorPregunta[i],
+      'documentCount': documentCount,
+    });
+
+    // También guardar las respuestas individuales
+    for (int j = 0; j < respuestasPorPregunta[i].length; j++) {
+      final nombreCampo = 'Respuesta${j + 1}';
+      await mediaDocRef.update({nombreCampo: respuestasPorPregunta[i][j]});
+    }
   }
 }
